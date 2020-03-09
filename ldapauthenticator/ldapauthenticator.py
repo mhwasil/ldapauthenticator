@@ -9,6 +9,7 @@ from traitlets import Int
 from traitlets import List
 from traitlets import Unicode
 from traitlets import Union
+from traitlets import Set
 
 
 class LDAPAuthenticator(Authenticator):
@@ -229,6 +230,46 @@ class LDAPAuthenticator(Authenticator):
         """,
     )
 
+    ldap_whitelist = Set(
+        help="""
+        Whitelist of usernames that are allowed to log in.
+        Use this with supported authenticators to restrict which users can log in. This is an
+        additional whitelist that further restricts users, beyond whatever restrictions the
+        authenticator has in place.
+        If empty, does not perform any additional restriction.
+        .. versionadded: 1.1
+        """
+    ).tag(config=True)
+    
+    check_account = Bool(
+        True,
+        help="""
+        Whether to check the user's account status via PAM during authentication.
+        The PAM account stack performs non-authentication based account 
+        management. It is typically used to restrict/permit access to a 
+        service and this step is needed to access the host's user access control.
+        Disabling this can be dangerous as authenticated but unauthorized users may
+        be granted access and, therefore, arbitrary execution on the system.
+        """,
+    ).tag(config=True)
+
+    def check_ldap_whitelist(self, username, authentication=None):
+        """Check if a username is blocked to authenticate based on blacklist configuration
+        Return True if username is allowed, False otherwise.
+        No blacklist means any username is allowed.
+        Names are normalized *before* being checked against the blacklist.
+        .. versionadded: 0.9
+        .. versionchanged:: 1.0
+            Signature updated to accept authentication data as second argument
+        """
+        if not self.ldap_whitelist:
+            # No whitelist means any name is allowed
+            return True
+        if username not in self.ldap_whitelist:
+            return False
+
+        return True
+
     def resolve_username(self, username_supplied_by_user):
         search_dn = self.lookup_dn_search_user
         if self.escape_userdn:
@@ -339,7 +380,7 @@ class LDAPAuthenticator(Authenticator):
                 self.valid_username_regex,
             )
             return None
-
+	
         # No empty passwords!
         if password is None or password.strip() == "":
             self.log.warning("username:%s Login denied for blank password", username)
@@ -461,6 +502,14 @@ class LDAPAuthenticator(Authenticator):
         if user_info:
             self.log.debug("username:%s attributes:%s", username, user_info)
             return {"name": username, "auth_state": user_info}
+
+	      # Check whether the username is in whitelist
+        if self.check_account:
+            if self.check_ldap_whitelist(username):
+                return username
+            else:
+                return None
+
         return username
 
 
