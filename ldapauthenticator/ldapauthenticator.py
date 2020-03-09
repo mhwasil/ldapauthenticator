@@ -254,21 +254,23 @@ class LDAPAuthenticator(Authenticator):
     ).tag(config=True)
 
     def check_ldap_whitelist(self, username, authentication=None):
-        """Check if a username is blocked to authenticate based on blacklist configuration
+        """Check if a username is in whitelist to authenticate based on blacklist configuration
         Return True if username is allowed, False otherwise.
-        No blacklist means any username is allowed.
+        No whitelist means any username is allowed.
         Names are normalized *before* being checked against the blacklist.
         .. versionadded: 0.9
         .. versionchanged:: 1.0
             Signature updated to accept authentication data as second argument
         """
+        # No whitelist means any name is allowed
         if not self.ldap_whitelist:
-            # No whitelist means any name is allowed
             return True
-        if username not in self.ldap_whitelist:
-            return False
 
-        return True
+        # Return True if username is in the whitelist
+        if username in self.ldap_whitelist:
+            return True
+
+        return False
 
     def resolve_username(self, username_supplied_by_user):
         search_dn = self.lookup_dn_search_user
