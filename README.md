@@ -109,6 +109,26 @@ are required, although their defaults might be sufficient for your use case.
 
 ### Optional configuration ###
 
+#### `LDAPAuthenticator.check_account` ####
+
+Whether to check the user’s account status via LDAP during authentication.
+If `True`, only users in the whitelist are allowed to log in.
+
+```python
+c.LDAPAuthenticator.check_account = True
+
+```
+
+#### `LDAPAuthenticator.ldap_whitelist####
+
+LDAP whitelist of users that are allowed to log in to the hub.
+This requires `LDAPAuthenticator.check_account` to be enabled.
+
+```python
+c.LDAPAuthenticator.ldap_whitelist = {'staff-fb02'} 
+
+```
+
 #### `LDAPAuthenticator.allowed_groups` ####
 
 LDAP groups whose members are allowed to log in. This must be
