@@ -119,7 +119,7 @@ c.LDAPAuthenticator.check_account = True
 
 ```
 
-#### `LDAPAuthenticator.ldap_whitelist####
+#### `LDAPAuthenticator.ldap_whitelist` ####
 
 LDAP whitelist of users that are allowed to log in to the hub.
 This requires `LDAPAuthenticator.check_account` to be enabled.
