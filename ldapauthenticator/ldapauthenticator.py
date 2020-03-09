@@ -380,7 +380,16 @@ class LDAPAuthenticator(Authenticator):
                 self.valid_username_regex,
             )
             return None
-	
+        	
+	      # Check whether the username is in whitelist
+        if self.check_account:
+            if not self.check_ldap_whitelist(username):
+                self.log.warning(
+                    "username:%s is not in the ldap_whitelist",
+                    username
+                )
+                return None
+        
         # No empty passwords!
         if password is None or password.strip() == "":
             self.log.warning("username:%s Login denied for blank password", username)
@@ -503,15 +512,7 @@ class LDAPAuthenticator(Authenticator):
             self.log.debug("username:%s attributes:%s", username, user_info)
             return {"name": username, "auth_state": user_info}
 
-	      # Check whether the username is in whitelist
-        if self.check_account:
-            if self.check_ldap_whitelist(username):
-                return username
-            else:
-                return None
-
         return username
-
 
 if __name__ == "__main__":
     import getpass
